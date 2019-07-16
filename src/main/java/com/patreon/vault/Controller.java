@@ -1,3 +1,6 @@
+package com.patreon.vault;
+
+
 import static spark.Spark.*;
 
 public class Controller {
