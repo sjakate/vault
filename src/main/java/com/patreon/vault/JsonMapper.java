@@ -2,6 +2,7 @@ package com.patreon.vault;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.util.Optional;
 
@@ -12,7 +13,8 @@ public class JsonMapper {
     private JsonMapper() {
         // config
         this.mapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(SerializationFeature.INDENT_OUTPUT, true);
     }
 
     public Optional<String> toJson(Object obj) {
