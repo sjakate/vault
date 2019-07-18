@@ -5,10 +5,9 @@ import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import com.amazonaws.util.StringUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.amazonaws.regions.Regions;
@@ -52,13 +51,16 @@ public class Controller {
 		get("/users/:token", (req, res) -> controller.getUser(req, res));
 
 		post("/cards", (req, res) -> controller.addCard(req, res));
-        get("/cards/:token", (req, res) -> controller.getCard(req, res));
-    }
+		get("/cards/:token", (req, res) -> controller.getCard(req, res));
+
+		post("/internal/cardupdater", (req, res) -> controller.cardUpdaterJob(req, res));
+
+
+	}
 
 	public String addUser(Request request, Response response) {
 		String token = UUID.randomUUID().toString();
 		HashMap responseBody = new HashMap<String, String>();
-
 		try {
 			byte[] bytesPayload = encrypt(request.body());
 			upload(BUCKET_NAME, token, bytesPayload);
@@ -144,6 +146,36 @@ public class Controller {
 			response.body(JsonMapper.JSON.toJson(responseBody).get());
 		}
 		return response.body();
+	}
+
+	public String cardUpdaterJob(Request request, Response response) {
+		try {
+			Map<String, String> payloadObj = JsonMapper.JSON.fromJson(request.body(), Map.class);
+			String token = payloadObj.get("token");
+
+			byte[] savedCardPayload = download(BUCKET_NAME, token);
+			String decryptedString = decrypt(savedCardPayload);
+
+			CardResponse cardResponse = JsonMapper.JSON.fromJson(decryptedString, CardResponse.class);
+			Map<String, String> ccInfo = cardResponse.creditCard;
+			ccInfo.put("pan", "4242424242424242");
+			ccInfo.put("expirationDate", "07-2025");
+			cardResponse.creditCard = ccInfo;
+
+			String updatedCard = JsonMapper.JSON.toJson(cardResponse).get();
+			byte[] bytesPayload = encrypt(updatedCard);
+			upload(BUCKET_NAME, token, bytesPayload);
+
+			response.status(200);
+
+		} catch(Exception e) {
+			e.printStackTrace();
+			HashMap responseBody = new HashMap<String, String>();
+			responseBody.put("error", e.getMessage());
+			response.status(500);
+			response.body(JsonMapper.JSON.toJson(responseBody).get());
+		}
+		return "";
 	}
 
     private byte[] encrypt(String plainText) {

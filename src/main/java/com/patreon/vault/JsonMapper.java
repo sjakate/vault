@@ -1,5 +1,6 @@
 package com.patreon.vault;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Optional;
@@ -9,8 +10,9 @@ public class JsonMapper {
     private ObjectMapper mapper;
 
     private JsonMapper() {
-        this.mapper = new ObjectMapper();
         // config
+        this.mapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public Optional<String> toJson(Object obj) {
@@ -22,13 +24,13 @@ public class JsonMapper {
         return Optional.empty();
     }
 
-    public Optional<Object> fromJson(String json, Class klass) {
+    public <T> T fromJson(String json, Class<T> klass) {
         try {
-            return Optional.of(mapper.readValue(json, klass));
+            return mapper.readValue(json, klass);
         } catch (Exception e) {
             System.out.println(e.getMessage());
+            throw new RuntimeException(e);
         }
-        return Optional.empty();
     }
 
 }

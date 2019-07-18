@@ -14,13 +14,14 @@ Non-admin user
 ```
 Authorization: Basic dXNlcj10ZXN0JnBhc3N3b3JkPTEyMw==
 ```
+
 ```
+// Tokenize PII
+
 POST /users
 {
-   "first_name" : "name", // required
-   "last_name" : "name",  // required
-   "ssn": "ssn"           // required
-   ...                    // can have up to N optional fields
+   key1: value1,
+   keyN: valueN
 }
 
 =>
@@ -32,19 +33,31 @@ POST /users
 GET  /users/:token
 =>
 {
-   "first_name" : "name",
-   "last_name" : "name",
-   "ssn": "ssn"
-   ...
+   key1: value1,
+   keyN: valueN
 }
 
 ------------------------------
 
+// Tokenize card PCI data
+
 POST /cards
 {
-   "name" : "Patrenau P",           // required
-   "pan" : "4111111111111111",      // required
-   "expiration": "07-07-2022",      // required
+    "nameOnAccount": "Sampath Thummati",
+    "paymentType": "CREDIT_CARD",
+    "creditCard": {
+        "pan": "4264281500066112",
+        "expirationDate": "04-2020",
+        "postalCode": "94537",
+        "cvv": "123"
+    },
+    "address": {
+      "street1": "123 Main Street.",
+      "city": "Union City",
+      "state": "CA",
+      "postalCode": "94537",
+      "countryCode": "US"
+    }
    ....                             // can have up to N optional fields
 }
 
@@ -57,13 +70,37 @@ GET /cards/:token
 =>
 
 {
-   "name" : "Patrenau P",
-   "pan" : "4111111111111111",
-   "expiration": "07-07-2022"
+    "nameOnAccount": "Sampath Thummati",
+    "paymentType": "CREDIT_CARD",
+    "creditCard": {
+        "pan": "4264281500066112",
+        "expirationDate": "04-2020",
+        "postalCode": "94537",
+        "cvv": "123"
+    },
+    "address": {
+      "street1": "123 Main Street.",
+      "city": "Union City",
+      "state": "CA",
+      "postalCode": "94537",
+      "countryCode": "US"
+    }
     ...
 }
 
+------------------------------
+
+// Run card updater for a card
+
+POST /internal/cardupdater
+{
+   "card_token" : "uuid",           // required
+}
+
+=> 200
+
 ```
+
 
 **Run**
 
