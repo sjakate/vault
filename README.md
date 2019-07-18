@@ -5,6 +5,7 @@ The goal behind a vault is to have a way for services to tokenize PII and card P
 for this: users and cards respectively. Contract for an MVP api is below
 
 Basic Auth Headers
+
 Admin user
 ```
 Authorization: Basic dXNlcj1hZG1pbiZwYXNzd29yZD0xMjM=
