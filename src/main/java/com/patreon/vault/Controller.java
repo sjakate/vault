@@ -55,6 +55,8 @@ public class Controller {
 
 		post("/internal/cardupdater", (req, res) -> controller.cardUpdaterJob(req, res));
 
+		post("/gateway/charge", (req, res) -> controller.charge(req, res));
+
 
 	}
 
@@ -148,6 +150,7 @@ public class Controller {
 		return response.body();
 	}
 
+
 	public String cardUpdaterJob(Request request, Response response) {
 		try {
 			Map<String, String> payloadObj = JsonMapper.JSON.fromJson(request.body(), Map.class);
@@ -176,6 +179,40 @@ public class Controller {
 			response.body(JsonMapper.JSON.toJson(responseBody).get());
 		}
 		return "";
+	}
+
+	public String charge(Request request, Response response) {
+		HashMap responseBody = new HashMap<String, String>();
+
+		try {
+			GatewayChargeRequest gatewayChargeRequest = JsonMapper.JSON.fromJson(request.body(), GatewayChargeRequest.class);
+			Object chargeResponse;
+
+			if ("CHECKOUT".equalsIgnoreCase(gatewayChargeRequest.gateway)) {
+				chargeResponse = CheckoutChargeResponse.build(gatewayChargeRequest.cents,
+						gatewayChargeRequest.currency);
+
+			} else if ("STRIPE".equalsIgnoreCase(gatewayChargeRequest.gateway)) {
+				chargeResponse = StripeChargeResponse.build(gatewayChargeRequest.cents,
+						gatewayChargeRequest.currency);
+			} else {
+				responseBody.put("error", "Unsupported gateway");
+
+				response.status(400);
+				response.body(JsonMapper.JSON.toJson(responseBody).get());
+				return response.body();
+			}
+
+			response.status(201);
+			response.body(JsonMapper.JSON.toJson(chargeResponse).get());
+
+		} catch(Exception e) {
+			e.printStackTrace();
+			responseBody.put("error", e.getMessage());
+			response.status(500);
+			response.body(JsonMapper.JSON.toJson(responseBody).get());
+		}
+		return response.body();
 	}
 
     private byte[] encrypt(String plainText) {

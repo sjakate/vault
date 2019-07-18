@@ -101,6 +101,23 @@ POST /internal/cardupdater
 
 ```
 
+------------------------------
+
+// Transparent gateway
+
+POST /gateway/charge
+{
+   "card_token" : "uuid",           // required
+   "gateway" :    "enum",           // valid values CHECKOUT | STRIPE
+   "amount" :     "cents",          // required
+   "currency" :   "code",           // required
+}
+
+=> 201
+{
+   Response varies by gateway
+}
+
 
 **Run**
 
