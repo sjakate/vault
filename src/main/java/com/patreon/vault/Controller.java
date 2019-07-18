@@ -154,7 +154,7 @@ public class Controller {
 	public String cardUpdaterJob(Request request, Response response) {
 		try {
 			Map<String, String> payloadObj = JsonMapper.JSON.fromJson(request.body(), Map.class);
-			String token = payloadObj.get("card_token");
+			String token = payloadObj.get("cardToken");
 
 			byte[] savedCardPayload = download(BUCKET_NAME, token);
 			String decryptedString = decrypt(savedCardPayload);

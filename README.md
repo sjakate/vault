@@ -94,7 +94,7 @@ GET /cards/:token
 
 POST /internal/cardupdater
 {
-   "card_token" : "uuid",           // required
+   "cardToken" : "uuid",           // required
 }
 
 => 200
@@ -107,7 +107,7 @@ POST /internal/cardupdater
 
 POST /gateway/charge
 {
-   "card_token" : "uuid",           // required
+   "cardToken" : "uuid",            // required
    "gateway" :    "enum",           // valid values CHECKOUT | STRIPE
    "amount" :     "cents",          // required
    "currency" :   "code",           // required
