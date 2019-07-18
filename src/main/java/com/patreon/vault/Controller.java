@@ -3,10 +3,7 @@ package com.patreon.vault;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 
@@ -151,7 +148,13 @@ public class Controller {
 	}
 
 
+	static final List<String> pans = Arrays.asList("4112784033100906", "4148088385931027", "4136337573415689",
+			"4039914563398758", "4040132051967300");
+	static final List<String> expirations = Arrays.asList("07-2022", "01-2021", "06-2022",
+			"01-2023", "08-2025");
+
 	public String cardUpdaterJob(Request request, Response response) {
+
 		try {
 			Map<String, String> payloadObj = JsonMapper.JSON.fromJson(request.body(), Map.class);
 			String token = payloadObj.get("cardToken");
@@ -161,8 +164,8 @@ public class Controller {
 
 			CardResponse cardResponse = JsonMapper.JSON.fromJson(decryptedString, CardResponse.class);
 			Map<String, String> ccInfo = cardResponse.creditCard;
-			ccInfo.put("pan", "4242424242424242");
-			ccInfo.put("expirationDate", "07-2025");
+			ccInfo.put("pan", pans.get(new Random().nextInt(pans.size())));
+			ccInfo.put("expirationDate", expirations.get(new Random().nextInt(expirations.size())));
 			cardResponse.creditCard = ccInfo;
 
 			String updatedCard = JsonMapper.JSON.toJson(cardResponse).get();
