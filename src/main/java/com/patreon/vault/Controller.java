@@ -1,9 +1,6 @@
 package com.patreon.vault;
 
 
-import static spark.Spark.get;
-import static spark.Spark.post;
-
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -25,6 +22,8 @@ import com.amazonaws.util.Base64;
 import spark.Request;
 import spark.Response;
 
+import static spark.Spark.*;
+
 public class Controller {
 	
 	private AmazonS3 s3;
@@ -40,9 +39,12 @@ public class Controller {
 				.withRegion(Regions.US_WEST_1)
 				.build();
 	}
-	
+
     public static void main(String[] args) {
     	Controller controller = new Controller();
+
+		before((req, res) -> controller.authenticate(req));
+
 		post("/users", (req, res) -> controller.addUser(req, res));
 		get("/users/:token", (req, res) -> controller.getUser(req, res));
 
@@ -75,14 +77,13 @@ public class Controller {
 	public String getUser(Request request, Response response) {
 
 		try {
-			isAdmin(request.headers("Authorization"));
 			String token = request.params("token");
 
 			byte[] bytesPayload = download(BUCKET_NAME, token);
 			String decryptedString = decrypt(bytesPayload);
 
 			response.status(200);
-			response.body(decryptedString);
+			response.body(DataMasker.maskSensitiveData(new StringBuilder(decryptedString), DataMasker.defaultPropertiesToSanitize));
 
 		} catch(Exception e) {
 
@@ -121,14 +122,13 @@ public class Controller {
 	public String getCard(Request request, Response response) {
 
 		try {
-			isAdmin(request.headers("Authorization"));
 			String token = request.params("token");
 
 			byte[] bytesPayload = download(BUCKET_NAME, token);
 			String decryptedString = decrypt(bytesPayload);
 
 			response.status(200);
-			response.body(decryptedString);
+			response.body(DataMasker.maskSensitiveData(new StringBuilder(decryptedString), DataMasker.defaultPropertiesToSanitize));
 
 		} catch(Exception e) {
 
@@ -163,18 +163,23 @@ public class Controller {
 		S3Object S3Object = s3.getObject(bucket, token);
 		return IOUtils.toByteArray(S3Object.getObjectContent());
 	}
-	
-	private boolean isAdmin(String header) throws InvalidAuthTokenException{
-		if(header == null || header.isEmpty()) {
-			return false;
+
+	private void authenticate(Request request) {
+		HashMap responseBody = new HashMap<String, String>();
+		responseBody.put("error", "Invalid auth token");
+		String authHeader = request.headers("Authorization");
+
+		if (authHeader == null || authHeader.isEmpty()) {
+			halt(401,  JsonMapper.JSON.toJson(responseBody).get());
 		}
+
 		try {
-			String token = header.split(" ")[1];
+			String token = authHeader.split(" ")[1];
 			String credentials = new String(Base64.decode(token)).split("&")[0];
 			String username = credentials.split("=")[1];
-			return username.equalsIgnoreCase("admin");
-		}catch(Exception e) {
-			throw new InvalidAuthTokenException("Invalid auth token");
+			request.attribute("role", username);
+		} catch(Exception e) {
+			halt(401,  JsonMapper.JSON.toJson(responseBody).get());
 		}
 	}
 }
