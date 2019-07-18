@@ -20,6 +20,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.util.Base64;
+
 import spark.Request;
 import spark.Response;
 
@@ -73,6 +75,7 @@ public class Controller {
 	public String getUser(Request request, Response response) {
 
 		try {
+			isAdmin(request.headers("Authorization"));
 			String token = request.params("token");
 
 			byte[] bytesPayload = download(BUCKET_NAME, token);
@@ -118,6 +121,7 @@ public class Controller {
 	public String getCard(Request request, Response response) {
 
 		try {
+			isAdmin(request.headers("Authorization"));
 			String token = request.params("token");
 
 			byte[] bytesPayload = download(BUCKET_NAME, token);
@@ -158,5 +162,19 @@ public class Controller {
 	private byte[] download(String bucket, String token) throws Exception {
 		S3Object S3Object = s3.getObject(bucket, token);
 		return IOUtils.toByteArray(S3Object.getObjectContent());
+	}
+	
+	private boolean isAdmin(String header) throws InvalidAuthTokenException{
+		if(header == null || header.isEmpty()) {
+			return false;
+		}
+		try {
+			String token = header.split(" ")[1];
+			String credentials = new String(Base64.decode(token)).split("&")[0];
+			String username = credentials.split("=")[1];
+			return username.equalsIgnoreCase("admin");
+		}catch(Exception e) {
+			throw new InvalidAuthTokenException("Invalid auth token");
+		}
 	}
 }
