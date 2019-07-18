@@ -3,9 +3,12 @@ package com.patreon.vault;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
+import com.amazonaws.util.StringUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.amazonaws.regions.Regions;
@@ -81,9 +84,10 @@ public class Controller {
 
 			byte[] bytesPayload = download(BUCKET_NAME, token);
 			String decryptedString = decrypt(bytesPayload);
+			String responseBody = DataMasker.maskSensitiveData(new StringBuilder(decryptedString), request.attribute("mask"));
 
 			response.status(200);
-			response.body(DataMasker.maskSensitiveData(new StringBuilder(decryptedString), DataMasker.defaultPropertiesToSanitize));
+			response.body(responseBody);
 
 		} catch(Exception e) {
 
@@ -120,15 +124,15 @@ public class Controller {
 	}
 
 	public String getCard(Request request, Response response) {
-
 		try {
 			String token = request.params("token");
 
 			byte[] bytesPayload = download(BUCKET_NAME, token);
 			String decryptedString = decrypt(bytesPayload);
+			String responseBody = DataMasker.maskSensitiveData(new StringBuilder(decryptedString), request.attribute("mask"));
 
 			response.status(200);
-			response.body(DataMasker.maskSensitiveData(new StringBuilder(decryptedString), DataMasker.defaultPropertiesToSanitize));
+			response.body(responseBody);
 
 		} catch(Exception e) {
 
@@ -178,6 +182,13 @@ public class Controller {
 			String credentials = new String(Base64.decode(token)).split("&")[0];
 			String username = credentials.split("=")[1];
 			request.attribute("role", username);
+
+			if ("admin".equalsIgnoreCase(username)) {
+				request.attribute("mask", Collections.EMPTY_LIST);
+			} else {
+				request.attribute("mask", DataMasker.defaultPropertiesToSanitize);
+			}
+
 		} catch(Exception e) {
 			halt(401,  JsonMapper.JSON.toJson(responseBody).get());
 		}
