@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 public class GatewayChargeRequest {
     public String cardToken;
     public String gateway;
-    public BigDecimal cents;
+    public BigDecimal amount;
     public String currency;
 
     public GatewayChargeRequest() {}

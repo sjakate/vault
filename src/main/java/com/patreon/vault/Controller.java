@@ -192,11 +192,11 @@ public class Controller {
 			Object chargeResponse;
 
 			if ("CHECKOUT".equalsIgnoreCase(gatewayChargeRequest.gateway)) {
-				chargeResponse = CheckoutChargeResponse.build(gatewayChargeRequest.cents,
+				chargeResponse = CheckoutChargeResponse.build(gatewayChargeRequest.amount,
 						gatewayChargeRequest.currency);
 
 			} else if ("STRIPE".equalsIgnoreCase(gatewayChargeRequest.gateway)) {
-				chargeResponse = StripeChargeResponse.build(gatewayChargeRequest.cents,
+				chargeResponse = StripeChargeResponse.build(gatewayChargeRequest.amount,
 						gatewayChargeRequest.currency);
 			} else {
 				responseBody.put("error", "Unsupported gateway");
